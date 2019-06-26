@@ -1,6 +1,7 @@
 
 #include "FrameBuffer.h"
 #include <math.h>
+#include <algorithm>
 
 struct Vec3
 {
