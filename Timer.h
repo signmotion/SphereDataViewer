@@ -1,8 +1,10 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-// Windows Header Files:
+// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
+
 
 struct Timer
 {
@@ -11,42 +13,47 @@ struct Timer
 	static double g_fMilliSecondsPerTick;
 	static unsigned int g_nCPUHerz;
 
-	static void Init() // called once
+	//! \warning Called once.
+	static void Init()
 	{
-		QueryPerformanceFrequency ((LARGE_INTEGER*)&g_nTicksPerSecond);
+		QueryPerformanceFrequency((LARGE_INTEGER*)& g_nTicksPerSecond);
 
 		g_fSecondsPerTick = 1.0 / (double)g_nTicksPerSecond;
 		g_fMilliSecondsPerTick = 1000.0 / (double)g_nTicksPerSecond;
 	}
+
 	//////////////////////////////////////////////////////////////////////////
 	static int GetMillis()
 	{
 		__int64 ticks;
-		GetTicks( &ticks );
+		GetTicks(&ticks);
 		return (int)(TicksToMilliseconds(ticks));
 	}
+
 	//////////////////////////////////////////////////////////////////////////
 	static double GetMillisFloat()
 	{
 		__int64 ticks;
-		GetTicks( &ticks );
-		return g_fMilliSecondsPerTick*ticks;
+		GetTicks(&ticks);
+		return g_fMilliSecondsPerTick * ticks;
 	}
+
 	//////////////////////////////////////////////////////////////////////////
 	static void GetTicks(__int64* pnTime)
 	{
 		LARGE_INTEGER nTick;
-		QueryPerformanceCounter((LARGE_INTEGER*)&nTick);
+		QueryPerformanceCounter((LARGE_INTEGER*)& nTick);
 		*pnTime = nTick.QuadPart;
 	}
+
 	//////////////////////////////////////////////////////////////////////////
-	static float TicksToSeconds (__int64 nTime)
+	static float TicksToSeconds(__int64 nTime)
 	{
 		return float(g_fSecondsPerTick * nTime);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	static float TicksToMilliseconds (__int64 nTime)
+	static float TicksToMilliseconds(__int64 nTime)
 	{
 		return float(g_fMilliSecondsPerTick * nTime);
 	}
