@@ -18,10 +18,7 @@ CFrameBuffer g_Framebuffer(1024,1024);
 
 // Initial orientation
 #define INITIAL_ANGLE  1.9f
-#define ANGLE_ROTATION 0.0f
-
-//#define INITIAL_ANGLE  0.0f
-//#define ANGLE_ROTATION 0.01f
+#define ANGLE_ROTATION 0.1f
 
 #define NUM_TIME_HISTORY 16
 
