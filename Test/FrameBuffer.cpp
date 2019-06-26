@@ -6,19 +6,19 @@
 
 struct Vec3
 {
-	double x, y, z;
+	float x, y, z;
 
-	Vec3 normalize()
+	Vec3 normalize() const
 	{
-		double d = sqrt(x * x + y * y + z * z);
+		const float d = 1.f / sqrt(x * x + y * y + z * z);
 		Vec3 vec;
-		vec.x = x / d;
-		vec.y = y / d;
-		vec.z = z / d;
+		vec.x = x * d;
+		vec.y = y * d;
+		vec.z = z * d;
 		return vec;
 	}
 
-	double dot(Vec3 v2)
+	float dot(const Vec3& v2) const
 	{
 		return x * v2.x + y * v2.y + z * v2.z;
 	}
