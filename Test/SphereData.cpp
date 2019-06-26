@@ -56,18 +56,22 @@ inline bool CompareSpheresFunc(
 
 void CSphereData::Render(CFrameBuffer& fb, float wi)
 {
-	std::vector<SSphereElement>::iterator it, end = m_SphereData.end();
+	const float s = sin(wi);
+	const float c = cos(wi);
 
-	float s = sin(wi);
-	float c = cos(wi);
+	std::for_each(
+		std::execution::par,
+		std::begin(m_SphereData),
+		std::end(m_SphereData),
+		[this, &fb, s, c](SSphereElement& ref) {
+			ref.screenZ = ref.x * c + ref.z * s;
+		});
 
-	for (it = m_SphereData.begin(); it != end; ++it)
-	{
-		SSphereElement& ref = *it;
-		ref.screenZ = ref.x * c + ref.z * s;
-	}
-
-	std::sort(m_SphereData.begin(), m_SphereData.end(), CompareSpheresFunc);
+	std::sort(
+		std::execution::par,
+		m_SphereData.begin(),
+		m_SphereData.end(),
+		CompareSpheresFunc);
 
 	std::for_each(
 		std::execution::par,
@@ -84,7 +88,6 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 			const float fScreenX = fX / fZ;
 			const float fScreenY = fY / fZ;
 			const float fScreenZ = fZ;
-
 			fb.RenderSphere(fScreenX, fScreenY, fScreenZ, ref.r / fZ, ref.dwARGB);
 		});
 }
