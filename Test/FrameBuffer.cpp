@@ -69,24 +69,28 @@ void CFrameBuffer::RenderSphere(
 	float fScreenRadius,
 	unsigned int ARGB)
 {
-	float centerX = fScreenX * m_iWidth / 2 + m_iWidth / 2;
-	float centerY = fScreenY * m_iWidth / 2 + m_iWidth / 2;
+	const float centerX = fScreenX * m_iWidth / 2 + m_iWidth / 2;
+	const float centerY = fScreenY * m_iWidth / 2 + m_iWidth / 2;
 
-	float RX = fScreenRadius * m_iWidth / 2;
-	float RY = fScreenRadius * m_iWidth / 2;
+	const float radius = fScreenRadius * m_iWidth / 2;
+	const float radius2 = radius * radius;
 
-	for (int x = centerX - RX * 2; x <= centerX + RX * 2; ++x)
+	for (int x = centerX - radius * 2; x <= centerX + radius * 2; ++x)
 	{
-		for (int y = centerY - RY * 2; y <= centerY + RY * 2; ++y)
-		{
-			int dx = x - centerX;
-			int dy = y - centerY;
+		if (x < 0 || x >= m_iWidth)
+			continue;
 
-			if (dx * dx + dy * dy > RX * RY)
-				continue;
+		const int dx = x - centerX;
+		const int dx2 = dx * dx;
+
+		for (int y = centerY - radius * 2; y <= centerY + radius * 2; ++y)
+		{
 			if (y < 0 || y >= m_iHeight)
 				continue;
-			if (x < 0 || x >= m_iWidth)
+
+			const int dy = y - centerY;
+			const int dy2 = dy * dy;
+			if (dx2 + dy2 > radius2)
 				continue;
 
 			// Phong shading
@@ -94,20 +98,20 @@ void CFrameBuffer::RenderSphere(
 				Vec3 vec_normal;
 				vec_normal.x = (float)dx;
 				vec_normal.y = (float)dy;
-				vec_normal.z = sqrt(float(RX * RY) - (dx * dx + dy * dy));
+				vec_normal.z = sqrt(radius2 - float(dx2 + dy2));
 				vec_normal = vec_normal.normalize();
 
-				float NdotL = Light.dot(vec_normal);
+				const float NdotL = Light.dot(vec_normal);
 				if (NdotL > 0)
 				{
 					Vec3 vec_eye;
 					vec_eye.x = Light.x + fScreenX;
 					vec_eye.y = Light.y + fScreenY;
-					vec_eye.z = Light.z + 1.0f;
+					vec_eye.z = Light.z + 1.f;
 					Vec3 vec_half = vec_eye.normalize();
 
-					float NdotHV = vec_half.dot(vec_normal);
-					float specular = pow(NdotHV, 9); // shininess=9
+					const float NdotHV = vec_half.dot(vec_normal);
+					const float specular = pow(NdotHV, 9); // shininess=9
 					float alpha = (NdotL + specular);
 					if (alpha > 1.0f)
 						alpha = 1.0f;
@@ -119,9 +123,9 @@ void CFrameBuffer::RenderSphere(
 					g = std::min(g, 255.f);
 					b = std::min(b, 255.f);
 
-					m_FramebufferArray[x + y * m_iWidth] = int(r) << 16;
-					m_FramebufferArray[x + y * m_iWidth] |= int(g) << 8;
-					m_FramebufferArray[x + y * m_iWidth] |= int(b) << 0;
+					const int i = x + y * m_iWidth;
+					const int color = (int(r) << 16) | (int(g) << 8) | (int(b) << 0);
+					m_FramebufferArray[i] = color;
 				}
 			}
 		}
