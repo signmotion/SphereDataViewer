@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <mutex>
 
 
 class CFrameBuffer
@@ -33,4 +34,8 @@ private:
 	std::vector<unsigned int> m_ZBuffer;
 	int m_iWidth;
 	int m_iHeight;
+
+	std::mutex mutex;
+
+	friend class CSphereData;
 };

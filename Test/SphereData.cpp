@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <algorithm>
+#include <execution>
 
 
 CSphereData::CSphereData(const char* szFilename)
@@ -68,24 +69,22 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 
 	std::sort(m_SphereData.begin(), m_SphereData.end(), CompareSpheresFunc);
 
-	for (it = m_SphereData.begin(); it != end; ++it)
-	{
-		const SSphereElement& ref = *it;
+	std::for_each(
+		std::execution::par,
+		std::begin(m_SphereData),
+		std::end(m_SphereData),
+		[this, &fb, s, c](const SSphereElement& ref) {
+			const float fX = ref.x * s - ref.z * c;
+			const float fY = ref.y;
+			float fZ = ref.screenZ;
+			fZ += 1.5f;
+			if (fZ < 0.001f)
+				return;
 
-		float fX = ref.x * s - ref.z * c;
-		float fY = ref.y;
-		//float fZ = ref.x*c+ref.z*s;
-		float fZ = ref.screenZ;
+			const float fScreenX = fX / fZ;
+			const float fScreenY = fY / fZ;
+			const float fScreenZ = fZ;
 
-		fZ += 1.5f;
-
-		if (fZ < 0.001f)
-			continue;
-
-		float fScreenX = fX / fZ;
-		float fScreenY = fY / fZ;
-		float fScreenZ = fZ;
-
-		fb.RenderSphere(fScreenX, fScreenY, fScreenZ, ref.r / fZ, ref.dwARGB);
-	}
+			fb.RenderSphere(fScreenX, fScreenY, fScreenZ, ref.r / fZ, ref.dwARGB);
+		});
 }

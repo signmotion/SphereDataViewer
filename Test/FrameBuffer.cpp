@@ -135,38 +135,39 @@ void CFrameBuffer::RenderSphere(
 				continue;
 
 			// Phong shading
+			Vec3 vec_normal = {
+				(float)dx,
+				(float)dy,
+				sqrtf(radius2 - (dx2 + dy2)) };
+			vec_normal.normalize();
+
+			const float NdotL = Light.dot(vec_normal);
+			if (NdotL > 0)
 			{
-				Vec3 vec_normal = {
-					(float)dx,
-					(float)dy,
-					sqrtf(radius2 - (dx2 + dy2)) };
-				vec_normal.normalize();
+				const Vec3 vec_eye = {
+					Light.x() + fScreenX,
+					Light.y() + fScreenY,
+					Light.z() + 1.f };
+				const Vec3 vec_half = vec_eye.normalizeCopy();
 
-				const float NdotL = Light.dot(vec_normal);
-				if (NdotL > 0)
+				const float NdotHV = vec_half.dot(vec_normal);
+				static constexpr float shininess = 12;
+				const float specular = pow(NdotHV, shininess);
+				float alpha = (NdotL + specular);
+				if (alpha > 1.0f)
+					alpha = 1.0f;
+
+				float r = ((ARGB & 0xFF0000) >> 16) * alpha;
+				float g = ((ARGB & 0x00FF00) >> 8) * alpha;
+				float b = ((ARGB & 0x0000FF >> 0)) * alpha;
+				r = std::min(r, 255.f);
+				g = std::min(g, 255.f);
+				b = std::min(b, 255.f);
+
+				const int i = x + y * m_iWidth;
+				const int color = (int(r) << 16) | (int(g) << 8) | (int(b) << 0);
 				{
-					const Vec3 vec_eye = {
-						Light.x() + fScreenX,
-						Light.y() + fScreenY,
-						Light.z() + 1.f };
-					const Vec3 vec_half = vec_eye.normalizeCopy();
-
-					const float NdotHV = vec_half.dot(vec_normal);
-					static constexpr float shininess = 12;
-					const float specular = pow(NdotHV, shininess);
-					float alpha = (NdotL + specular);
-					if (alpha > 1.0f)
-						alpha = 1.0f;
-
-					float r = ((ARGB & 0xFF0000) >> 16) * alpha;
-					float g = ((ARGB & 0x00FF00) >> 8) * alpha;
-					float b = ((ARGB & 0x0000FF >> 0)) * alpha;
-					r = std::min(r, 255.f);
-					g = std::min(g, 255.f);
-					b = std::min(b, 255.f);
-
-					const int i = x + y * m_iWidth;
-					const int color = (int(r) << 16) | (int(g) << 8) | (int(b) << 0);
+					std::lock_guard guard(mutex);
 					m_FramebufferArray[i] = color;
 				}
 			}
