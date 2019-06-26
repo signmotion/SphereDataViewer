@@ -98,7 +98,7 @@ void CFrameBuffer::RenderSphere(
 				Vec3 vec_normal;
 				vec_normal.x = (float)dx;
 				vec_normal.y = (float)dy;
-				vec_normal.z = sqrt(radius2 - float(dx2 + dy2));
+				vec_normal.z = sqrt(radius2 - (dx2 + dy2));
 				vec_normal = vec_normal.normalize();
 
 				const float NdotL = Light.dot(vec_normal);
@@ -111,14 +111,15 @@ void CFrameBuffer::RenderSphere(
 					Vec3 vec_half = vec_eye.normalize();
 
 					const float NdotHV = vec_half.dot(vec_normal);
-					const float specular = pow(NdotHV, 9); // shininess=9
+					static constexpr float shininess = 12;
+					const float specular = pow(NdotHV, shininess);
 					float alpha = (NdotL + specular);
 					if (alpha > 1.0f)
 						alpha = 1.0f;
 
 					float r = ((ARGB & 0xFF0000) >> 16) * alpha;
 					float g = ((ARGB & 0x00FF00) >> 8) * alpha;
-					float b = ((ARGB & 0x0000FF)) * alpha;
+					float b = ((ARGB & 0x0000FF >> 0)) * alpha;
 					r = std::min(r, 255.f);
 					g = std::min(g, 255.f);
 					b = std::min(b, 255.f);
