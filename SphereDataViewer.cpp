@@ -1,8 +1,10 @@
 // SphereDataViewer.cpp : Defines the entry point for the application.
-//
 
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-// Windows Header Files:
+// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN
+#define _USE_MATH_DEFINES
+
+#include <math.h>
 #include <windows.h>
 
 #include "resource.h"
@@ -10,17 +12,16 @@
 #include "Test\SphereData.h"
 #include "Test\FrameBuffer.h"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
 
 CSphereData g_Data("sphere_sample_points.txt");
-CFrameBuffer g_Framebuffer(1024,1024);
+CFrameBuffer g_Framebuffer(1024, 1024);
 
 // Initial orientation
-#define INITIAL_ANGLE  1.9f
-#define ANGLE_ROTATION 0.1f
+static const float INITIAL_ANGLE = 1.9f;
+static const float ANGLE_ROTATION = 0.1f;
 
-#define NUM_TIME_HISTORY 16
+static const int NUM_TIME_HISTORY = 16;
+
 
 //////////////////////////////////////////////////////////////////////////////////
 class CViewer
@@ -40,19 +41,19 @@ public:
 		m_curTimeHistory = 0;
 	}
 
-	void RenderFrame( HDC hdc )
+	void RenderFrame(HDC hdc)
 	{
 		g_Framebuffer.Clear();
-		
+
 		double t0 = Timer::GetMillisFloat();
-		g_Data.Render(g_Framebuffer,m_wi);
+		g_Data.Render(g_Framebuffer, m_wi);
 		double t1 = Timer::GetMillisFloat();
-		SetRenderTime(t1-t0);
+		SetRenderTime(t1 - t0);
 
 		PaintFrameBuffer(hdc);
 
 		m_wi += m_fAnimateAngleRatio;
-		if (m_wi >= 2*M_PI)
+		if (m_wi >= 2 * M_PI)
 		{
 			m_lastFullRotationTime = m_accumulatedRenderTime;
 			m_accumulatedRenderTime = 0;
@@ -60,8 +61,9 @@ public:
 		}
 	}
 
+
 private:
-	void PaintFrameBuffer( HDC hdc )
+	void PaintFrameBuffer(HDC hdc)
 	{
 		m_nFrame++;
 
@@ -75,24 +77,26 @@ private:
 			hbmMem = CreateCompatibleBitmap(hdc, iWidth, iHeight);
 		}
 
-		const unsigned int *p = g_Framebuffer.GetFrameBuffer();
+		const unsigned int* p = g_Framebuffer.GetFrameBuffer();
 
 		// Draw back buffer
-		HANDLE hOld   = SelectObject(hdcMem, hbmMem);
+		HANDLE hOld = SelectObject(hdcMem, hbmMem);
 
-		SetBitmapBits(hbmMem,4*iWidth*iHeight,p);
+		SetBitmapBits(hbmMem, 4 * iWidth * iHeight, p);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		// Display FPS
 		//////////////////////////////////////////////////////////////////////////////////
-		float fps = (float)(1000.f/m_averageFrameTime);
+		float fps = (float)(1000.f / m_averageFrameTime);
 
 		char str[1024];
-		sprintf_s( str,"Frame:%d:  fps:%.1f,  %.2fms",m_nFrame,fps,m_averageFrameTime );
-		TextOut(hdcMem,0,0,str,(int)strlen(str) );
+		sprintf_s(str, "Frame:%d:  fps:%.1f,  %.2fms",
+			m_nFrame, fps, m_averageFrameTime);
+		TextOut(hdcMem, 0, 0, str, (int)strlen(str));
 
-		sprintf_s( str,"Turn Time: %.2f sec",(float)(m_lastFullRotationTime/1000.0) );
-		TextOut(hdcMem,0,16,str,(int)strlen(str) );
+		sprintf_s(str, "Turn Time: %.2f sec",
+			(float)(m_lastFullRotationTime / 1000.0));
+		TextOut(hdcMem, 0, 16, str, (int)strlen(str));
 		//////////////////////////////////////////////////////////////////////////////////
 
 		// Transfer the off-screen DC to the screen
@@ -101,9 +105,9 @@ private:
 		// Free-up the off-screen DC
 		SelectObject(hdcMem, hOld);
 	}
-	
+
 	//////////////////////////////////////////////////////////////////////////
-	void SetRenderTime( double t )
+	void SetRenderTime(double t)
 	{
 		m_accumulatedRenderTime += t;
 		m_timeHistory[m_curTimeHistory] = t;
@@ -112,7 +116,7 @@ private:
 
 		double mint = 100000;
 		double avgt = 0;
-		for (int i = 0; i < NUM_TIME_HISTORY; i++) 
+		for (int i = 0; i < NUM_TIME_HISTORY; i++)
 		{
 			avgt += m_timeHistory[i];
 			if (m_timeHistory[i] < mint)
@@ -122,7 +126,8 @@ private:
 
 		// Smooth out fps (disabled)
 		float ratio = 1.0f;
-		m_averageFrameTime = m_averageFrameTime*(1.0f-ratio) + avgt*ratio;
+		m_averageFrameTime =
+			m_averageFrameTime * (1.0f - ratio) + avgt * ratio;
 	}
 
 
@@ -142,10 +147,13 @@ private:
 	float m_fAnimateAngleRatio;
 };
 
+
 CViewer g_viewer;
 
+
 //////////////////////////////////////////////////////////////////////////////////
-#define MAX_LOADSTRING 100
+static const int MAX_LOADSTRING = 100;
+
 // Global Variables:
 HWND g_hWnd = 0;
 HINSTANCE hInst;								// current instance
@@ -162,14 +170,13 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 //////////////////////////////////////////////////////////////////////////////////
 int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPTSTR    lpCmdLine,
-                     int       nCmdShow)
+	HINSTANCE hPrevInstance,
+	LPTSTR    lpCmdLine,
+	int       nCmdShow)
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
- 	// TODO: Place code here.
 	MSG msg;
 	HACCEL hAccelTable;
 
@@ -179,19 +186,20 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	MyRegisterClass(hInstance);
 
 	// Perform application initialization:
-	if (!InitInstance (hInstance, nCmdShow))
+	if (!InitInstance(hInstance, nCmdShow))
 	{
 		return FALSE;
 	}
 
-	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SPHEREDATAVIEWER));
+	hAccelTable = LoadAccelerators(
+		hInstance, MAKEINTRESOURCE(IDC_SPHEREDATAVIEWER));
 
 	HDC hdc = GetDC(g_hWnd);
 
 	while (true)
 	{
 		// Main message loop:
-		while (PeekMessage(&msg, NULL, 0, 0,TRUE))
+		while (PeekMessage(&msg, NULL, 0, 0, TRUE))
 		{
 			if (msg.message == WM_QUIT)
 				return 0;
@@ -200,25 +208,14 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 			}
-
-			//////////////////////////////////////////////////////////////////////////
-			// Do Painting.
-			//////////////////////////////////////////////////////////////////////////
-
-			//g_Framebuffer.Clear();
-			//g_Data.Render(g_Framebuffer,g_wi);
-			//g_Framebuffer.Paint(hdc);
-
-			//g_wi+=0.1f;
 		}
-		InvalidateRect(g_hWnd,0,FALSE);
+		InvalidateRect(g_hWnd, 0, FALSE);
 	}
 
-	ReleaseDC(g_hWnd,hdc);
+	ReleaseDC(g_hWnd, hdc);
 
-	return (int) msg.wParam;
+	return (int)msg.wParam;
 }
-
 
 
 //
@@ -240,20 +237,21 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
 	wcex.cbSize = sizeof(WNDCLASSEX);
 
-	wcex.style			= CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc	= WndProc;
-	wcex.cbClsExtra		= 0;
-	wcex.cbWndExtra		= 0;
-	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SPHEREDATAVIEWER));
-	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_SPHEREDATAVIEWER);
-	wcex.lpszClassName	= szWindowClass;
-	wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = WndProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SPHEREDATAVIEWER));
+	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszMenuName = MAKEINTRESOURCE(IDC_SPHEREDATAVIEWER);
+	wcex.lpszClassName = szWindowClass;
+	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
 	return RegisterClassEx(&wcex);
 }
+
 
 //
 //   FUNCTION: InitInstance(HINSTANCE, int)
@@ -262,33 +260,35 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 //   COMMENTS:
 //
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
+//        In this function, we save the instance handle
+//        in a global variable and create and display
+//        the main program window.
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   HWND hWnd;
+	HWND hWnd;
 
-   hInst = hInstance; // Store instance handle in our global variable
+	hInst = hInstance; // Store instance handle in our global variable
 
-	 Timer::Init();
+	Timer::Init();
 
-	 int width = g_Framebuffer.GetWidth();
-	 int height = g_Framebuffer.GetHeight();
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, CW_USEDEFAULT, width,height, 0, NULL, hInstance, NULL);
+	int width = g_Framebuffer.GetWidth();
+	int height = g_Framebuffer.GetHeight();
+	hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT, width, height, 0, NULL, hInstance, NULL);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+	if (!hWnd)
+	{
+		return FALSE;
+	}
 
-	 g_hWnd = hWnd;
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+	g_hWnd = hWnd;
+	ShowWindow(hWnd, nCmdShow);
+	UpdateWindow(hWnd);
 
-   return TRUE;
+	return TRUE;
 }
+
 
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
@@ -300,7 +300,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY	- post a quit message and return
 //
 //
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WndProc(
+	HWND hWnd,
+	UINT message,
+	WPARAM wParam,
+	LPARAM lParam)
 {
 	int wmId, wmEvent;
 	PAINTSTRUCT ps;
@@ -309,7 +313,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_COMMAND:
-		wmId    = LOWORD(wParam);
+		wmId = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
 		// Parse the menu selections:
 		switch (wmId)
@@ -325,15 +329,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_PAINT:
-		{
-			hdc = BeginPaint(hWnd, &ps);
-			g_viewer.RenderFrame( hdc );
-			EndPaint(hWnd, &ps);
+	{
+		hdc = BeginPaint(hWnd, &ps);
+		g_viewer.RenderFrame(hdc);
+		EndPaint(hWnd, &ps);
 
-			//InvalidateRect(hWnd,0,false);
-			//UpdateWindow(hWnd);
-		}
-		break;
+		//InvalidateRect(hWnd,0,false);
+		//UpdateWindow(hWnd);
+	}
+	break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
@@ -343,8 +347,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+
 // Message handler for about box.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK About(
+	HWND hDlg,
+	UINT message,
+	WPARAM wParam,
+	LPARAM lParam)
 {
 	UNREFERENCED_PARAMETER(lParam);
 	switch (message)
