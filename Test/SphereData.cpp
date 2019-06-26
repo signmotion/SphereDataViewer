@@ -16,22 +16,25 @@ CSphereData::CSphereData(const char* szFilename)
 	for (;;)
 	{
 		SSphereElement el;
-
-		if (fscanf_s(in, "%f %f %f", &el.x, &el.y, &el.z) != 3)
+		el.sphere = new SSphere;
+		if (fscanf_s(in, "%f %f %f",
+			&el.sphere->x, &el.sphere->y, &el.sphere->z) != 3)
+		{
 			break;
+		}
 
-		el.y -= 60;
-		el.z -= 50;
+		el.sphere->y -= 60;
+		el.sphere->z -= 50;
 
-		el.x *= 0.01f;
-		el.y *= 0.01f;
-		el.z *= 0.01f;
+		el.sphere->x *= 0.01f;
+		el.sphere->y *= 0.01f;
+		el.sphere->z *= 0.01f;
 
-		el.r = 5.0f + 5.0f * (rand() % 1024) / 1024.0f;
-		el.r *= 0.004f;
-		el.dwARGB = rand() & 0xff;
-		el.dwARGB = (el.dwARGB << 8) | (rand() & 0xff);
-		el.dwARGB = (el.dwARGB << 8) | (rand() & 0xff);
+		el.sphere->r = 5.0f + 5.0f * (rand() % 1024) / 1024.0f;
+		el.sphere->r *= 0.004f;
+		el.sphere->dwARGB = rand() & 0xff;
+		el.sphere->dwARGB = (el.sphere->dwARGB << 8) | (rand() & 0xff);
+		el.sphere->dwARGB = (el.sphere->dwARGB << 8) | (rand() & 0xff);
 
 		m_SphereData.push_back(el);
 		//if (num++ > 100) break;
@@ -43,6 +46,9 @@ CSphereData::CSphereData(const char* szFilename)
 
 CSphereData::~CSphereData()
 {
+	for (auto&& el : m_SphereData) {
+		delete el.sphere;
+	}
 }
 
 
@@ -64,7 +70,7 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 		std::begin(m_SphereData),
 		std::end(m_SphereData),
 		[this, &fb, s, c](SSphereElement& ref) {
-			ref.screenZ = ref.x * c + ref.z * s;
+			ref.screenZ = ref.sphere->x * c + ref.sphere->z * s;
 		});
 
 	std::sort(
@@ -78,8 +84,8 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 		std::begin(m_SphereData),
 		std::end(m_SphereData),
 		[this, &fb, s, c](const SSphereElement& ref) {
-			const float fX = ref.x * s - ref.z * c;
-			const float fY = ref.y;
+			const float fX = ref.sphere->x * s - ref.sphere->z * c;
+			const float fY = ref.sphere->y;
 			float fZ = ref.screenZ;
 			fZ += 1.5f;
 			if (fZ < 0.001f)
@@ -88,6 +94,11 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 			const float fScreenX = fX / fZ;
 			const float fScreenY = fY / fZ;
 			const float fScreenZ = fZ;
-			fb.RenderSphere(fScreenX, fScreenY, fScreenZ, ref.r / fZ, ref.dwARGB);
+			fb.RenderSphere(
+				fScreenX,
+				fScreenY,
+				fScreenZ,
+				ref.sphere->r / fZ,
+				ref.sphere->dwARGB);
 		});
 }

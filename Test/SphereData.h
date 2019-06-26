@@ -3,10 +3,17 @@
 #include <vector>
 
 
+struct SSphere
+{
+	float x, y, z, r;
+	unsigned int dwARGB;
+};
+
+
 struct SSphereElement
 {
-	float x, y, z, r, screenZ;
-	unsigned int dwARGB;
+	float screenZ;
+	SSphere* sphere;
 };
 
 
