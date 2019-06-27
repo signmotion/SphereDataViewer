@@ -101,6 +101,7 @@
     <ClInclude Include="Test\FrameBuffer.h" />
     <ClInclude Include="Test\SphereData.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="Vec3.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico" />
