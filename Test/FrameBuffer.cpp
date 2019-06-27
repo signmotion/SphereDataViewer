@@ -74,7 +74,7 @@ Vec3 Light = { 1.f, -0.5f, 0.7f };
 
 
 //////////////////////////////////////////////////////////////////////////
-CFrameBuffer::CFrameBuffer(const int iWidth, const int iHeight) :
+CFrameBuffer::CFrameBuffer(int iWidth, int iHeight) :
 	m_iWidth(iWidth),
 	m_iHeight(iHeight)
 {
@@ -101,29 +101,23 @@ void CFrameBuffer::Clear()
 }
 
 
-const unsigned int* CFrameBuffer::GetFrameBuffer() const
+const CFrameBuffer::color_t* CFrameBuffer::GetFrameBuffer() const
 {
-	return static_cast<const unsigned int*>(std::data(m_FramebufferArray));
+	return static_cast<const color_t*>(std::data(m_FramebufferArray));
 };
 
 
-void CFrameBuffer::RenderSphere(
-	float fScreenX,
-	float fScreenY,
-	float fScreenZ,
-	float fScreenRadius,
-	color_t ARGB)
+void CFrameBuffer::RenderSphere(const FrameRenderElement& fre)
 {
 	const float halfWidth = m_iWidth / 2;
-	const float centerX = fScreenX * halfWidth + halfWidth;
-	const float centerY = fScreenY * halfWidth + halfWidth;
+	const float centerX = fre.screenX * halfWidth + halfWidth;
+	const float centerY = fre.screenY * halfWidth + halfWidth;
 
-	const float radius = fScreenRadius * halfWidth;
+	const float radius = fre.screenRadius * halfWidth;
 	const float radius2 = radius * radius;
 
-	//const DirectShading shading{ ARGB };
-	const PhongShading shading{
-		fScreenX, fScreenY, fScreenZ, fScreenRadius, radius, ARGB };
+	//const DirectShading shading{ fre };
+	const PhongShading shading{ fre, radius };
 
 	for (int x = centerX - radius * 2; x <= centerX + radius * 2; ++x)
 	{
@@ -148,7 +142,7 @@ void CFrameBuffer::RenderSphere(
 			// faster but more dirt
 			//const float avgD = (std::abs(dx) + std::abs(dy)) / 2;
 			const float dr = (avgD / radius) * radius / halfWidth;
-			const float fScreenZ3D = fScreenZ + dr;
+			const float fScreenZ3D = fre.screenZ + dr;
 
 			const int i = x + y * m_iWidth;
 			if (m_ZBuffer[i] > fScreenZ3D)
@@ -160,7 +154,7 @@ void CFrameBuffer::RenderSphere(
 					m_FramebufferArray[i] = color;
 					m_ZBuffer[i] = fScreenZ3D;
 				}
-			} // if fScreenZ
+			} // if fScreenZ3D
 
 		} // for y
 	} // for x
@@ -189,9 +183,10 @@ Shading::color_t PhongShading::operator()(int x, int y) const
 	color_t color = GetUndefinedColor();
 	if (NdotL > 0)
 	{
+		const FrameRenderElement& fre = GetFrameRenderElement();
 		const Vec3 vec_eye = {
-			Light.x() + m_screenX,
-			Light.y() + m_screenY,
+			Light.x() + fre.screenX,
+			Light.y() + fre.screenY,
 			Light.z() + 1.f };
 		const Vec3 vec_half = vec_eye.normalizeCopy();
 

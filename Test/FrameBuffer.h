@@ -5,6 +5,7 @@
 
 
 class Shading;
+struct FrameRenderElement;
 
 
 class CFrameBuffer
@@ -28,12 +29,7 @@ public:
 	//! \param fScreenY [-1..1]
 	//! \param fScreenZ ]0..1[
 	//! \param fScreenRadius >0 (-1..1 = 2 means full screen)
-	void RenderSphere(
-		float fScreenX,
-		float fScreenY,
-		float fScreenZ,
-		float fScreenRadius,
-		color_t ARGB);
+	void RenderSphere(const FrameRenderElement&);
 
 	const color_t* GetFrameBuffer() const;
 	int GetWidth() const { return m_iWidth; }
@@ -57,6 +53,17 @@ private:
 
 
 
+struct FrameRenderElement {
+	float screenX;
+	float screenY;
+	float screenZ;
+	float screenRadius;
+	CFrameBuffer::color_t ARGB;
+};
+
+
+
+
 //! \brief Base class for shading.
 class Shading {
 public:
@@ -64,8 +71,8 @@ public:
 
 
 public:
-	explicit Shading(color_t baseColor) :
-		m_baseColor(baseColor)
+	explicit Shading(const FrameRenderElement& fre) :
+		m_fre(fre)
 	{}
 
 	virtual ~Shading()
@@ -73,7 +80,7 @@ public:
 
 	color_t GetBaseColor() const
 	{
-		return m_baseColor;
+		return m_fre.ARGB;
 	}
 
 	static color_t GetUndefinedColor()
@@ -95,13 +102,18 @@ public:
 		return color != GetUndefinedColor();
 	}
 
+	const FrameRenderElement& GetFrameRenderElement() const
+	{
+		return m_fre;
+	}
+
 	//! \param x Coord in a frame buffer.
 	//! \param y Coord in a frame buffer.
 	virtual color_t operator()(int x, int y) const = 0;
 
 
 private:
-	color_t m_baseColor;
+	FrameRenderElement m_fre;
 };
 
 
@@ -109,8 +121,8 @@ private:
 
 class DirectShading : public Shading {
 public:
-	explicit DirectShading(color_t baseColor) :
-		Shading(baseColor)
+	explicit DirectShading(const FrameRenderElement& fre) :
+		Shading(fre)
 	{}
 
 	virtual color_t operator()(int x, int y) const override;
@@ -121,19 +133,8 @@ public:
 
 class PhongShading : public Shading {
 public:
-	PhongShading(
-		float screenX,
-		float screenY,
-		float screenZ,
-		float screenRadius,
-		float frameRadius,
-		color_t baseColor
-	) :
-		Shading(baseColor),
-		m_screenX(screenX),
-		m_screenY(screenY),
-		m_screenZ(screenZ),
-		m_screenRadius(screenRadius),
+	PhongShading(const FrameRenderElement& fre, float frameRadius) :
+		Shading(fre),
 		m_frameRadius(frameRadius)
 	{}
 
@@ -141,9 +142,5 @@ public:
 
 
 private:
-	float m_screenX;
-	float m_screenY;
-	float m_screenZ;
-	float m_screenRadius;
 	float m_frameRadius;
 };

@@ -109,16 +109,14 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 			if (fZ < 0.001f)
 				return;
 
-			const float fScreenX = fX / fZ;
-			const float fScreenY = fY / fZ;
-			const float fScreenZ = fZ;
-			const float fScreenRadius = ref.sphere->r / fZ;
-			fb.RenderSphere(
-				fScreenX,
-				fScreenY,
-				fScreenZ,
-				fScreenRadius,
-				ref.sphere->dwARGB);
+			const FrameRenderElement fre{
+				fX / fZ,
+				fY / fZ,
+				fZ,
+				ref.sphere->r / fZ,
+				ref.sphere->dwARGB
+			};
+			fb.RenderSphere(fre);
 		});
 
 	// pause
