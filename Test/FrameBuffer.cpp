@@ -74,8 +74,9 @@ Vec3 Light = { 1.f, -0.5f, 0.7f };
 
 
 //////////////////////////////////////////////////////////////////////////
-CFrameBuffer::CFrameBuffer(const int iWidth, const int iHeight)
-	:m_iWidth(iWidth), m_iHeight(iHeight)
+CFrameBuffer::CFrameBuffer(const int iWidth, const int iHeight) :
+	m_iWidth(iWidth),
+	m_iHeight(iHeight)
 {
 	const int size = iWidth * iHeight;
 	m_FramebufferArray.resize(size, 0);
@@ -119,6 +120,8 @@ void CFrameBuffer::RenderSphere(
 
 	const float radius = fScreenRadius * halfWidth;
 	const float radius2 = radius * radius;
+
+	const DirectShading shading{ ARGB };
 
 	for (int x = centerX - radius * 2; x <= centerX + radius * 2; ++x)
 	{
@@ -189,14 +192,22 @@ void CFrameBuffer::RenderSphere(
 #endif
 
 				// Direct shading
-				const int color = ARGB;
+				const Shading::color_t color = shading(dx, dy);
 				{
 					std::lock_guard guard(mutex);
 					m_FramebufferArray[i] = color;
 					m_ZBuffer[i] = fScreenZ3D;
 				}
-} // if fScreenZ
+			} // if fScreenZ
 
 		} // for y
 	} // for x
+}
+
+
+
+
+Shading::color_t DirectShading::operator()(int, int) const
+{
+	return baseColor();
 }
