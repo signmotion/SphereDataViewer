@@ -70,14 +70,6 @@ CSphereData::~CSphereData()
 }
 
 
-inline bool CompareSpheresFunc(
-	const SSphereElement& s1,
-	const SSphereElement& s2)
-{
-	return s1.screenZ < s2.screenZ;
-}
-
-
 void CSphereData::Render(CFrameBuffer& fb, float wi)
 {
 	const float s = sin(wi);
@@ -95,7 +87,10 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 		std::execution::par,
 		m_SphereData.begin(),
 		m_SphereData.end(),
-		CompareSpheresFunc);
+		[](const SSphereElement& s1, const SSphereElement& s2)
+		{
+			return s1.screenZ < s2.screenZ;
+		});
 
 	std::for_each(
 		std::execution::par,
