@@ -77,7 +77,9 @@ Vec3 Light = { 1.f, -0.5f, 0.7f };
 CFrameBuffer::CFrameBuffer(const int iWidth, const int iHeight)
 	:m_iWidth(iWidth), m_iHeight(iHeight)
 {
-	m_FramebufferArray.resize(iWidth * iHeight, 0);
+	const int size = iWidth * iHeight;
+	m_FramebufferArray.resize(size, 0);
+	m_ZBuffer.resize(size, 0);
 
 	Light.normalize();
 }
@@ -90,16 +92,17 @@ CFrameBuffer::~CFrameBuffer()
 
 void CFrameBuffer::Clear()
 {
-	memset(&m_FramebufferArray[0], 0, m_iWidth * m_iHeight * 4);
-
-	//Light.x -= 0.02f; // some light animation
-	//Light = Light.normalize();
+	const int size = m_iWidth * m_iHeight;
+	memset(std::data(m_FramebufferArray), 0,
+		size * sizeof(frameBuffer_t::value_type));
+	std::fill(std::begin(m_ZBuffer), std::end(m_ZBuffer),
+		std::numeric_limits< zBuffer_t::value_type >::max());
 }
 
 
 const unsigned int* CFrameBuffer::GetFrameBuffer() const
 {
-	return static_cast<const unsigned int*>(&m_FramebufferArray[0]);
+	return static_cast<const unsigned int*>(std::data(m_FramebufferArray));
 };
 
 
@@ -134,43 +137,58 @@ void CFrameBuffer::RenderSphere(
 			if (dx2 + dy2 > radius2)
 				continue;
 
-			// Phong shading
-			Vec3 vec_normal = {
-				(float)dx,
-				(float)dy,
-				sqrtf(radius2 - (dx2 + dy2)) };
-			vec_normal.normalize();
-
-			const float NdotL = Light.dot(vec_normal);
-			if (NdotL > 0)
+			const int i = x + y * m_iWidth;
+			if (m_ZBuffer[i] > fScreenZ)
 			{
-				const Vec3 vec_eye = {
-					Light.x() + fScreenX,
-					Light.y() + fScreenY,
-					Light.z() + 1.f };
-				const Vec3 vec_half = vec_eye.normalizeCopy();
+				// Phong shading
+#if 0
+				Vec3 vec_normal = {
+					(float)dx,
+					(float)dy,
+					sqrtf(radius2 - (dx2 + dy2)) };
+				vec_normal.normalize();
 
-				const float NdotHV = vec_half.dot(vec_normal);
-				static constexpr float shininess = 12;
-				const float specular = pow(NdotHV, shininess);
-				float alpha = (NdotL + specular);
-				if (alpha > 1.0f)
-					alpha = 1.0f;
+				const float NdotL = Light.dot(vec_normal);
+				if (NdotL > 0)
+				{
+					const Vec3 vec_eye = {
+						Light.x() + fScreenX,
+						Light.y() + fScreenY,
+						Light.z() + 1.f };
+					const Vec3 vec_half = vec_eye.normalizeCopy();
 
-				float r = ((ARGB & 0xFF0000) >> 16) * alpha;
-				float g = ((ARGB & 0x00FF00) >> 8) * alpha;
-				float b = ((ARGB & 0x0000FF >> 0)) * alpha;
-				r = std::min(r, 255.f);
-				g = std::min(g, 255.f);
-				b = std::min(b, 255.f);
+					const float NdotHV = vec_half.dot(vec_normal);
+					static constexpr float shininess = 12;
+					const float specular = pow(NdotHV, shininess);
+					float alpha = (NdotL + specular);
+					if (alpha > 1.0f)
+						alpha = 1.0f;
 
-				const int i = x + y * m_iWidth;
-				const int color = (int(r) << 16) | (int(g) << 8) | (int(b) << 0);
+					float r = ((ARGB & 0xFF0000) >> 16) * alpha;
+					float g = ((ARGB & 0x00FF00) >> 8) * alpha;
+					float b = ((ARGB & 0x0000FF >> 0)) * alpha;
+					r = std::min(r, 255.f);
+					g = std::min(g, 255.f);
+					b = std::min(b, 255.f);
+
+					const int color = (int(r) << 16) | (int(g) << 8) | (int(b) << 0);
+					{
+						std::lock_guard guard(mutex);
+						m_FramebufferArray[i] = color;
+						m_ZBuffer[i] = fScreenZ;
+					}
+				} // if NdotL > 0
+#endif
+
+				// Direct shading
+				const int color = ARGB;
 				{
 					std::lock_guard guard(mutex);
 					m_FramebufferArray[i] = color;
+					m_ZBuffer[i] = fScreenZ;
 				}
-			}
-		}
-	}
+			} // if fScreenZ
+
+		} // for y
+	} // for x
 }

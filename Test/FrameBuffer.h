@@ -7,6 +7,11 @@
 class CFrameBuffer
 {
 public:
+	typedef std::vector< unsigned int > frameBuffer_t;
+	typedef std::vector< float > zBuffer_t;
+
+
+public:
 	CFrameBuffer(const int iWidth, const int iHeight);
 
 	~CFrameBuffer();
@@ -30,8 +35,8 @@ public:
 
 
 private:
-	std::vector<unsigned int> m_FramebufferArray;
-	std::vector<unsigned int> m_ZBuffer;
+	frameBuffer_t m_FramebufferArray;
+	zBuffer_t m_ZBuffer;
 	int m_iWidth;
 	int m_iHeight;
 

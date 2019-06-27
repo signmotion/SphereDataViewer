@@ -32,12 +32,30 @@ CSphereData::CSphereData(const char* szFilename)
 
 		el.sphere->r = 5.0f + 5.0f * (rand() % 1024) / 1024.0f;
 		el.sphere->r *= 0.004f;
+
 		el.sphere->dwARGB = rand() & 0xff;
 		el.sphere->dwARGB = (el.sphere->dwARGB << 8) | (rand() & 0xff);
 		el.sphere->dwARGB = (el.sphere->dwARGB << 8) | (rand() & 0xff);
 
+		/* test
+		if (num == 0) {
+			// red
+			el.sphere->dwARGB = 0xFFFF0000;
+		}
+		else if (num == 1) {
+			// green
+			el.sphere->dwARGB = 0xFF00FF00;
+		}
+		else if (num == 2) {
+			// blue
+			el.sphere->dwARGB = 0xFF0000FF;
+		}
+		*/
+
 		m_SphereData.push_back(el);
-		//if (num++ > 100) break;
+
+		++num;
+		//if (num > 100) break;
 	}
 
 	fclose(in);
@@ -56,7 +74,7 @@ inline bool CompareSpheresFunc(
 	const SSphereElement& s1,
 	const SSphereElement& s2)
 {
-	return s1.screenZ > s2.screenZ;
+	return s1.screenZ < s2.screenZ;
 }
 
 
@@ -70,7 +88,7 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 		std::begin(m_SphereData),
 		std::end(m_SphereData),
 		[this, &fb, s, c](SSphereElement& ref) {
-			ref.screenZ = ref.sphere->x * c + ref.sphere->z * s;
+			ref.screenZ = ref.sphere->z * c + ref.sphere->x * s;
 		});
 
 	std::sort(
@@ -84,7 +102,7 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 		std::begin(m_SphereData),
 		std::end(m_SphereData),
 		[this, &fb, s, c](const SSphereElement& ref) {
-			const float fX = ref.sphere->x * s - ref.sphere->z * c;
+			const float fX = ref.sphere->x * c - ref.sphere->z * s;
 			const float fY = ref.sphere->y;
 			float fZ = ref.screenZ;
 			fZ += 1.5f;
@@ -94,11 +112,15 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 			const float fScreenX = fX / fZ;
 			const float fScreenY = fY / fZ;
 			const float fScreenZ = fZ;
+			const float fScreenRadius = ref.sphere->r / fZ;
 			fb.RenderSphere(
 				fScreenX,
 				fScreenY,
 				fScreenZ,
-				ref.sphere->r / fZ,
+				fScreenRadius,
 				ref.sphere->dwARGB);
 		});
+
+	// pause
+	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 }
