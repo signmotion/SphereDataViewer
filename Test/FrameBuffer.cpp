@@ -112,7 +112,7 @@ void CFrameBuffer::RenderSphere(
 	float fScreenY,
 	float fScreenZ,
 	float fScreenRadius,
-	unsigned int ARGB)
+	color_t ARGB)
 {
 	const float halfWidth = m_iWidth / 2;
 	const float centerX = fScreenX * halfWidth + halfWidth;
@@ -121,7 +121,9 @@ void CFrameBuffer::RenderSphere(
 	const float radius = fScreenRadius * halfWidth;
 	const float radius2 = radius * radius;
 
-	const DirectShading shading{ ARGB };
+	//const DirectShading shading{ ARGB };
+	const PhongShading shading{
+		fScreenX, fScreenY, fScreenZ, fScreenRadius, radius, ARGB };
 
 	for (int x = centerX - radius * 2; x <= centerX + radius * 2; ++x)
 	{
@@ -151,48 +153,8 @@ void CFrameBuffer::RenderSphere(
 			const int i = x + y * m_iWidth;
 			if (m_ZBuffer[i] > fScreenZ3D)
 			{
-				// Phong shading
-#if 0
-				Vec3 vec_normal = {
-					(float)dx,
-					(float)dy,
-					sqrtf(radius2 - (dx2 + dy2)) };
-				vec_normal.normalize();
-
-				const float NdotL = Light.dot(vec_normal);
-				if (NdotL > 0)
-				{
-					const Vec3 vec_eye = {
-						Light.x() + fScreenX,
-						Light.y() + fScreenY,
-						Light.z() + 1.f };
-					const Vec3 vec_half = vec_eye.normalizeCopy();
-
-					const float NdotHV = vec_half.dot(vec_normal);
-					static constexpr float shininess = 12;
-					const float specular = pow(NdotHV, shininess);
-					float alpha = (NdotL + specular);
-					if (alpha > 1.0f)
-						alpha = 1.0f;
-
-					float r = ((ARGB & 0xFF0000) >> 16) * alpha;
-					float g = ((ARGB & 0x00FF00) >> 8) * alpha;
-					float b = ((ARGB & 0x0000FF >> 0)) * alpha;
-					r = std::min(r, 255.f);
-					g = std::min(g, 255.f);
-					b = std::min(b, 255.f);
-
-					const int color = (int(r) << 16) | (int(g) << 8) | (int(b) << 0);
-					{
-						std::lock_guard guard(mutex);
-						m_FramebufferArray[i] = color;
-						m_ZBuffer[i] = fScreenZ;
-					}
-				} // if NdotL > 0
-#endif
-
-				// Direct shading
 				const Shading::color_t color = shading(dx, dy);
+				if (Shading::IsDefinedColor(color))
 				{
 					std::lock_guard guard(mutex);
 					m_FramebufferArray[i] = color;
@@ -209,5 +171,46 @@ void CFrameBuffer::RenderSphere(
 
 Shading::color_t DirectShading::operator()(int, int) const
 {
-	return baseColor();
+	return GetBaseColor();
+}
+
+
+
+
+Shading::color_t PhongShading::operator()(int x, int y) const
+{
+	Vec3 vec_normal = {
+		(float)x,
+		(float)y,
+		sqrtf(m_frameRadius * m_frameRadius - (x * x + y * y)) };
+	vec_normal.normalize();
+
+	const float NdotL = Light.dot(vec_normal);
+	color_t color = GetUndefinedColor();
+	if (NdotL > 0)
+	{
+		const Vec3 vec_eye = {
+			Light.x() + m_screenX,
+			Light.y() + m_screenY,
+			Light.z() + 1.f };
+		const Vec3 vec_half = vec_eye.normalizeCopy();
+
+		const float NdotHV = vec_half.dot(vec_normal);
+		static constexpr float shininess = 12;
+		const float specular = pow(NdotHV, shininess);
+		float alpha = (NdotL + specular);
+		if (alpha > 1.0f)
+			alpha = 1.0f;
+
+		float r = ((GetBaseColor() & 0xFF0000) >> 16) * alpha;
+		float g = ((GetBaseColor() & 0x00FF00) >> 8) * alpha;
+		float b = ((GetBaseColor() & 0x0000FF >> 0)) * alpha;
+		r = std::min(r, 255.f);
+		g = std::min(g, 255.f);
+		b = std::min(b, 255.f);
+
+		color = (int(r) << 16) | (int(g) << 8) | (int(b) << 0);
+	} // if NdotL > 0
+
+	return color;
 }

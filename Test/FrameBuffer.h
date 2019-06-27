@@ -14,6 +14,8 @@ public:
 	typedef std::vector< color_t > frameBuffer_t;
 	typedef std::vector< float > zBuffer_t;
 
+	static constexpr color_t UNDEFINED_COLOR = 0x00000000;
+
 
 public:
 	CFrameBuffer(int iWidth, int iHeight);
@@ -69,9 +71,28 @@ public:
 	virtual ~Shading()
 	{}
 
-	color_t baseColor() const
+	color_t GetBaseColor() const
 	{
 		return m_baseColor;
+	}
+
+	static color_t GetUndefinedColor()
+	{
+		return CFrameBuffer::UNDEFINED_COLOR;
+	}
+
+	//! \brief Detect when a color is undefined.
+	//! \see IsDefinedColor()
+	static bool IsUndefinedColor(color_t color)
+	{
+		return color == GetUndefinedColor();
+	}
+
+	//! \brief Detect when a color is defined.
+	//! \see IsUndefinedColor()
+	static bool IsDefinedColor(color_t color)
+	{
+		return color != GetUndefinedColor();
 	}
 
 	//! \param x Coord in a frame buffer.
@@ -93,4 +114,36 @@ public:
 	{}
 
 	virtual color_t operator()(int x, int y) const override;
+};
+
+
+
+
+class PhongShading : public Shading {
+public:
+	PhongShading(
+		float screenX,
+		float screenY,
+		float screenZ,
+		float screenRadius,
+		float frameRadius,
+		color_t baseColor
+	) :
+		Shading(baseColor),
+		m_screenX(screenX),
+		m_screenY(screenY),
+		m_screenZ(screenZ),
+		m_screenRadius(screenRadius),
+		m_frameRadius(frameRadius)
+	{}
+
+	virtual color_t operator()(int x, int y) const override;
+
+
+private:
+	float m_screenX;
+	float m_screenY;
+	float m_screenZ;
+	float m_screenRadius;
+	float m_frameRadius;
 };
