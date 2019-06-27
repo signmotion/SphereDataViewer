@@ -9,11 +9,12 @@
 
 #include "resource.h"
 #include "Timer.h"
-#include "Test\SphereData.h"
-#include "Test\FrameBuffer.h"
+#include "Test/SphereData.h"
+#include "Test/FrameBuffer.h"
 
 
 CSphereData g_Data("sphere_sample_points.txt");
+//CSphereData g_Data("sphere_sample_points_min.txt");
 CFrameBuffer g_Framebuffer(1024, 1024);
 
 // Initial orientation
