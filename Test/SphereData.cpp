@@ -88,7 +88,7 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 		std::begin(m_SphereData),
 		std::end(m_SphereData),
 		[this, &fb, s, c](SSphereElement& ref) {
-			ref.screenZ = ref.sphere->z * c + ref.sphere->x * s;
+			ref.screenZ = ref.sphere->z * s + ref.sphere->x * c;
 		});
 
 	std::sort(
@@ -102,7 +102,7 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 		std::begin(m_SphereData),
 		std::end(m_SphereData),
 		[this, &fb, s, c](const SSphereElement& ref) {
-			const float fX = ref.sphere->x * c - ref.sphere->z * s;
+			const float fX = ref.sphere->x * s - ref.sphere->z * c;
 			const float fY = ref.sphere->y;
 			float fZ = ref.screenZ;
 			fZ += 1.5f;
