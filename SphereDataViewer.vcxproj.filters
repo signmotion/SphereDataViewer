@@ -28,6 +28,9 @@
     <ClInclude Include="Vec3.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Vec3SIMD.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -54,6 +57,9 @@
     </ClCompile>
     <ClCompile Include="Test\SphereData.cpp">
       <Filter>Test</Filter>
+    </ClCompile>
+    <ClCompile Include="Vec3SIMD.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

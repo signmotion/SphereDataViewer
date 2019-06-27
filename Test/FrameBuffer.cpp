@@ -1,12 +1,16 @@
 #include "FrameBuffer.h"
 #include "../Vec3.h"
+#include "../Vec3SIMD.h"
 
 #include <math.h>
 #include <algorithm>
 
+// change a vector
+typedef Vec3SIMD vec_t;
+//typedef Vec3 vec_t;
 
 // Global light
-Vec3 Light = { 1.f, -0.5f, 0.7f };
+vec_t Light = { 1.f, -0.5f, 0.7f };
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -109,7 +113,7 @@ Shading::color_t DirectShading::operator()(int, int) const
 
 Shading::color_t PhongShading::operator()(int x, int y) const
 {
-	Vec3 vec_normal = {
+	vec_t vec_normal = {
 		(float)x,
 		(float)y,
 		sqrtf(m_frameRadius * m_frameRadius - (x * x + y * y)) };
@@ -120,11 +124,11 @@ Shading::color_t PhongShading::operator()(int x, int y) const
 	if (NdotL > 0)
 	{
 		const FrameRenderElement& fre = GetFrameRenderElement();
-		const Vec3 vec_eye = {
-			Light.x() + fre.screenX,
-			Light.y() + fre.screenY,
-			Light.z() + 1.f };
-		const Vec3 vec_half = vec_eye.normalizeCopy();
+		const vec_t vec_eye = {
+			Light.x + fre.screenX,
+			Light.y + fre.screenY,
+			Light.z + 1.f };
+		const vec_t vec_half = vec_eye.normalizeCopy();
 
 		const float NdotHV = vec_half.dot(vec_normal);
 		static constexpr float shininess = 12;
