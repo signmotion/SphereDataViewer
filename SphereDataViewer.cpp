@@ -18,8 +18,8 @@ CSphereData g_Data("sphere_sample_points.txt");
 CFrameBuffer g_Framebuffer(1024, 1024);
 
 // Initial orientation
-static const float INITIAL_ANGLE = 1.9f;
-static const float ANGLE_ROTATION = 0.1f;
+static const float INITIAL_ANGLE = M_PI / 2;
+static const float ANGLE_ROTATION = 0.f;
 
 static const int NUM_TIME_HISTORY = 16;
 

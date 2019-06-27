@@ -113,10 +113,11 @@ void CFrameBuffer::RenderSphere(
 	float fScreenRadius,
 	unsigned int ARGB)
 {
-	const float centerX = fScreenX * m_iWidth / 2 + m_iWidth / 2;
-	const float centerY = fScreenY * m_iWidth / 2 + m_iWidth / 2;
+	const float halfWidth = m_iWidth / 2;
+	const float centerX = fScreenX * halfWidth + halfWidth;
+	const float centerY = fScreenY * halfWidth + halfWidth;
 
-	const float radius = fScreenRadius * m_iWidth / 2;
+	const float radius = fScreenRadius * halfWidth;
 	const float radius2 = radius * radius;
 
 	for (int x = centerX - radius * 2; x <= centerX + radius * 2; ++x)
@@ -137,8 +138,15 @@ void CFrameBuffer::RenderSphere(
 			if (dx2 + dy2 > radius2)
 				continue;
 
+			// smooth a 2D circle to 3D
+			const float avgD = sqrtf(dx2 + dy2);
+			// faster but more dirt
+			//const float avgD = (std::abs(dx) + std::abs(dy)) / 2;
+			const float dr = (avgD / radius) * radius / halfWidth;
+			const float fScreenZ3D = fScreenZ + dr;
+
 			const int i = x + y * m_iWidth;
-			if (m_ZBuffer[i] > fScreenZ)
+			if (m_ZBuffer[i] > fScreenZ3D)
 			{
 				// Phong shading
 #if 0
@@ -185,9 +193,9 @@ void CFrameBuffer::RenderSphere(
 				{
 					std::lock_guard guard(mutex);
 					m_FramebufferArray[i] = color;
-					m_ZBuffer[i] = fScreenZ;
+					m_ZBuffer[i] = fScreenZ3D;
 				}
-			} // if fScreenZ
+} // if fScreenZ
 
 		} // for y
 	} // for x
