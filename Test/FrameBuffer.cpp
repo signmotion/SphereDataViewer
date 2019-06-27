@@ -4,6 +4,7 @@
 
 #include <math.h>
 #include <algorithm>
+#include <execution>
 
 // change a vector
 typedef Vec3SIMD vec_t;
@@ -36,7 +37,10 @@ void CFrameBuffer::Clear()
 	const int size = m_iWidth * m_iHeight;
 	memset(std::data(m_FramebufferArray), 0,
 		size * sizeof(frameBuffer_t::value_type));
-	std::fill(std::begin(m_ZBuffer), std::end(m_ZBuffer),
+	std::fill(
+		std::execution::par,
+		std::begin(m_ZBuffer),
+		std::end(m_ZBuffer),
 		std::numeric_limits< zBuffer_t::value_type >::max());
 }
 
