@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <mutex>
+#include <map>
 
 
 class Shading;
@@ -30,6 +31,7 @@ public:
 	//! \param fScreenZ ]0..1[
 	//! \param fScreenRadius >0 (-1..1 = 2 means full screen)
 	void RenderSphere(const FrameRenderElement&);
+	void RenderSphere2(const FrameRenderElement&);
 
 	const color_t* GetFrameBuffer() const;
 	int GetWidth() const { return m_iWidth; }
@@ -48,6 +50,14 @@ private:
 	int m_iHeight;
 
 	std::mutex mutex;
+
+	//! Pixels of active circle.
+	//! \see RenderSphere2()
+	typedef std::pair< int, int > coord_t;
+	typedef std::vector< coord_t > circle_t;
+	typedef std::map< int /* sizeBox */, circle_t > poolCircles_t;
+	//! Adaptive pool for fixed circle's radius.
+	mutable poolCircles_t poolCircles;
 };
 
 

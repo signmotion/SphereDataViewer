@@ -111,7 +111,7 @@ void CSphereData::Render(CFrameBuffer& fb, float wi)
 				ref.sphere->r / fZ,
 				ref.sphere->dwARGB
 			};
-			fb.RenderSphere(fre);
+			fb.RenderSphere2(fre);
 		});
 
 	// pause
