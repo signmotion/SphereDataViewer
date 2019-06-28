@@ -32,7 +32,7 @@ class CViewer
 public:
 	CViewer()
 	{
-		m_wi = INITIAL_ANGLE;
+		m_wi = m_wi_last = INITIAL_ANGLE;
 		m_fAnimateAngleRatio = ANGLE_AUTO_ROTATION;
 		m_autoRotation = AUTO_ROTATION;
 
@@ -47,14 +47,17 @@ public:
 
 	void RenderFrame(HDC hdc)
 	{
-		g_Framebuffer.Clear();
-
 		double t0 = Timer::GetMillisFloat();
-		g_Data.Render(g_Framebuffer, m_wi);
+		if (m_wi != m_wi_last) {
+			g_Framebuffer.Clear();
+			g_Data.Render(g_Framebuffer, m_wi);
+		}
+		PaintFrameBuffer(hdc);
+
 		double t1 = Timer::GetMillisFloat();
 		SetRenderTime(t1 - t0);
 
-		PaintFrameBuffer(hdc);
+		m_wi_last = m_wi;
 
 		if (m_autoRotation)
 		{
@@ -170,6 +173,7 @@ private:
 	int m_curTimeHistory;
 
 	float m_wi;
+	float m_wi_last;
 	float m_fAnimateAngleRatio;
 	bool m_autoRotation;
 };
