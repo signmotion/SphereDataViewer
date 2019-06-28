@@ -37,10 +37,7 @@ public:
 	int GetWidth() const { return m_iWidth; }
 	int GetHeight() const { return m_iHeight; }
 
-
-private:
-	//! \return Color for coords.
-	color_t color(Shading*);
+	bool IsCircleOnScene(float x, float y, float radius) const;
 
 
 private:

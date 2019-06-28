@@ -58,6 +58,11 @@ void CFrameBuffer::RenderSphere(const FrameRenderElement& fre)
 	const float centerY = fre.screenY * halfWidth + halfWidth;
 
 	const float radius = fre.screenRadius * halfWidth;
+
+	if (!IsCircleOnScene(centerX, centerY, radius)) {
+		return;
+	}
+
 	const float radius2 = radius * radius;
 
 	//const DirectShading shading{ fre };
@@ -112,6 +117,11 @@ void CFrameBuffer::RenderSphere2(const FrameRenderElement& fre)
 	const float centerY = fre.screenY * halfWidth + halfWidth;
 
 	const float radius = fre.screenRadius * halfWidth;
+
+	if (!IsCircleOnScene(centerX, centerY, radius)) {
+		return;
+	}
+
 	const float radius2 = radius * radius;
 
 	//const DirectShading shading{ fre };
@@ -192,6 +202,23 @@ void CFrameBuffer::RenderSphere2(const FrameRenderElement& fre)
 				}
 			} // if fScreenZ3D
 		});
+}
+
+
+bool CFrameBuffer::IsCircleOnScene(float x, float y, float radius) const
+{
+	const auto IsPointOnBox = [this](float px, float py) {
+		return (px > 0 && px < m_iWidth) && (py > 0 && py < m_iHeight);
+	};
+	const float left = x - radius;
+	const float right = x + radius;
+	const float top = y - radius;
+	const float bottom = y + radius;
+	return
+		IsPointOnBox(left, top) ||
+		IsPointOnBox(right, top) ||
+		IsPointOnBox(right, bottom) ||
+		IsPointOnBox(left, bottom);
 }
 
 
