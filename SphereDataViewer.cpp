@@ -18,8 +18,10 @@ CSphereData g_Data("sphere_sample_points.txt");
 CFrameBuffer g_Framebuffer(1024, 1024);
 
 // Initial orientation
-static const float INITIAL_ANGLE = M_PI / 2;
-static const float ANGLE_ROTATION = 0.05f;
+static const float INITIAL_ANGLE = M_PI / 3;
+static const float ANGLE_DELTA = 0.05f;
+static const float ANGLE_AUTO_ROTATION = 0.05f;
+static const bool AUTO_ROTATION = true;
 
 static const int NUM_TIME_HISTORY = 16;
 
@@ -31,7 +33,8 @@ public:
 	CViewer()
 	{
 		m_wi = INITIAL_ANGLE;
-		m_fAnimateAngleRatio = ANGLE_ROTATION;
+		m_fAnimateAngleRatio = ANGLE_AUTO_ROTATION;
+		m_autoRotation = AUTO_ROTATION;
 
 		m_accumulatedRenderTime = 0;
 		m_lastFullRotationTime = 0;
@@ -53,13 +56,31 @@ public:
 
 		PaintFrameBuffer(hdc);
 
-		m_wi += m_fAnimateAngleRatio;
-		if (m_wi >= 2 * M_PI)
+		if (m_autoRotation)
 		{
-			m_lastFullRotationTime = m_accumulatedRenderTime;
-			m_accumulatedRenderTime = 0;
-			m_wi = 0;
-		}
+			m_wi += m_fAnimateAngleRatio;
+			if (m_wi >= 2 * M_PI)
+			{
+				m_lastFullRotationTime = m_accumulatedRenderTime;
+				m_accumulatedRenderTime = 0;
+				m_wi = 0;
+			}
+		} // if m_autoRotation
+	}
+
+	void IncreaseAngle()
+	{
+		m_wi += ANGLE_DELTA;
+	}
+
+	void DecreaseAngle()
+	{
+		m_wi -= ANGLE_DELTA;
+	}
+
+	void SetAutoRotation(bool v)
+	{
+		m_autoRotation = v;
 	}
 
 
@@ -68,8 +89,8 @@ private:
 	{
 		m_nFrame++;
 
-		int iWidth = g_Framebuffer.GetWidth();
-		int iHeight = g_Framebuffer.GetHeight();
+		const int iWidth = g_Framebuffer.GetWidth();
+		const int iHeight = g_Framebuffer.GetHeight();
 
 		// Create an off-screen DC for double-buffering
 		if (!hbmMem)
@@ -78,25 +99,30 @@ private:
 			hbmMem = CreateCompatibleBitmap(hdc, iWidth, iHeight);
 		}
 
-		const unsigned int* p = g_Framebuffer.GetFrameBuffer();
+		const CFrameBuffer::color_t* p = g_Framebuffer.GetFrameBuffer();
 
 		// Draw back buffer
 		HANDLE hOld = SelectObject(hdcMem, hbmMem);
 
-		SetBitmapBits(hbmMem, 4 * iWidth * iHeight, p);
+		SetBitmapBits(
+			hbmMem,
+			sizeof(CFrameBuffer::frameBuffer_t::value_type) * iWidth * iHeight, p);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		// Display FPS
 		//////////////////////////////////////////////////////////////////////////////////
-		float fps = (float)(1000.f / m_averageFrameTime);
+		float fps = (float)(1000 / m_averageFrameTime);
 		char str[1024];
-		sprintf_s(str, "Frame: %d:  fps: %.1f, %.2f ms",
+		sprintf_s(str, "Frame: %d:  FPS: %.1f ms, %.2f ms",
 			m_nFrame, fps, m_averageFrameTime);
 		TextOut(hdcMem, 0, 0, str, (int)strlen(str));
 
-		sprintf_s(str, "Turn Time: %.2f s",
-			(float)(m_lastFullRotationTime / 1000.0));
+		sprintf_s(str, "Turn time: %.2f s",
+			(float)(m_lastFullRotationTime / 1000));
 		TextOut(hdcMem, 0, 16, str, (int)strlen(str));
+
+		const char* s = "> Press arrows for manual rotation.";
+		TextOut(hdcMem, 0, 32, s, (int)strlen(s));
 		//////////////////////////////////////////////////////////////////////////////////
 
 		// Transfer the off-screen DC to the screen
@@ -145,6 +171,7 @@ private:
 
 	float m_wi;
 	float m_fAnimateAngleRatio;
+	bool m_autoRotation;
 };
 
 
@@ -295,6 +322,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //  PURPOSE:  Processes messages for the main window.
 //
+//  WM_KEYDOWN  - pressed keys on a keyboard
 //  WM_COMMAND	- process the application menu
 //  WM_PAINT	- Paint the main window
 //  WM_DESTROY	- post a quit message and return
@@ -312,38 +340,57 @@ LRESULT CALLBACK WndProc(
 
 	switch (message)
 	{
+	case WM_KEYDOWN:
+		// any key stops auto rotation
+		g_viewer.SetAutoRotation(false);
+		switch (wParam)
+		{
+		case VK_LEFT:
+			g_viewer.IncreaseAngle();
+			break;
+
+		case VK_RIGHT:
+			g_viewer.DecreaseAngle();
+			break;
+		}
+		break;
+
 	case WM_COMMAND:
 		wmId = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
+
 		// Parse the menu selections:
 		switch (wmId)
 		{
 		case IDM_ABOUT:
 			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
+
 		case IDM_EXIT:
 			DestroyWindow(hWnd);
 			break;
+
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
 		break;
+
 	case WM_PAINT:
 	{
 		hdc = BeginPaint(hWnd, &ps);
 		g_viewer.RenderFrame(hdc);
 		EndPaint(hWnd, &ps);
-
-		//InvalidateRect(hWnd,0,false);
-		//UpdateWindow(hWnd);
 	}
 	break;
+
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
+
 	return 0;
 }
 
