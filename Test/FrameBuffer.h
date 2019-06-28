@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <mutex>
-#include <map>
+#include <unordered_map>
 
 
 class Shading;
@@ -52,7 +52,7 @@ private:
 	//! \see RenderSphere2()
 	typedef std::pair< int, int > coord_t;
 	typedef std::vector< coord_t > circle_t;
-	typedef std::map< int /* sizeBox */, circle_t > poolCircles_t;
+	typedef std::unordered_map< int /* sizeBox */, circle_t > poolCircles_t;
 	//! Adaptive pool for fixed circle's radius.
 	mutable poolCircles_t poolCircles;
 };
