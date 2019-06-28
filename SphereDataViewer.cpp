@@ -19,7 +19,7 @@ CFrameBuffer g_Framebuffer(1024, 1024);
 
 // Initial orientation
 static const float INITIAL_ANGLE = M_PI / 2;
-static const float ANGLE_ROTATION = 0.f;
+static const float ANGLE_ROTATION = 0.05f;
 
 static const int NUM_TIME_HISTORY = 16;
 
@@ -89,13 +89,12 @@ private:
 		// Display FPS
 		//////////////////////////////////////////////////////////////////////////////////
 		float fps = (float)(1000.f / m_averageFrameTime);
-
 		char str[1024];
-		sprintf_s(str, "Frame:%d:  fps:%.1f,  %.2fms",
+		sprintf_s(str, "Frame: %d:  fps: %.1f, %.2f ms",
 			m_nFrame, fps, m_averageFrameTime);
 		TextOut(hdcMem, 0, 0, str, (int)strlen(str));
 
-		sprintf_s(str, "Turn Time: %.2f sec",
+		sprintf_s(str, "Turn Time: %.2f s",
 			(float)(m_lastFullRotationTime / 1000.0));
 		TextOut(hdcMem, 0, 16, str, (int)strlen(str));
 		//////////////////////////////////////////////////////////////////////////////////
