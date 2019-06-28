@@ -3,14 +3,14 @@
 #include <vector>
 
 
-struct SSphere
+__declspec(align(32)) struct SSphere
 {
 	float x, y, z, r;
 	unsigned int dwARGB;
 };
 
 
-struct SSphereElement
+__declspec(align(32)) struct SSphereElement
 {
 	float screenZ;
 	SSphere* sphere;
@@ -28,5 +28,6 @@ public:
 
 	void Render(CFrameBuffer& fb, float wi);
 
+private:
 	std::vector<SSphereElement> m_SphereData;
 };
